@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Inventory Management | Admin Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --google-blue: #1a73e8;
+            --google-gray: #5f6368;
+            --google-red: #d93025;
+            --border-color: #dadce0;
+            --surface: #ffffff;
+            --bg: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Google Sans', Roboto, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            color: #202124;
+        }
+
+        header {
+            height: 64px;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h2 {
+            font-size: 22px;
+            font-weight: 400;
+            color: var(--google-gray);
+            margin: 0;
+        }
+
+        .main-container {
+            display: flex;
+            padding: 24px;
+            gap: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .form-sidebar {
+            width: 340px;
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            height: fit-content;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #3c4043;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--google-blue);
+            box-shadow: 0 0 0 1px var(--google-blue);
+        }
+
+        /* Hidden by default until login */
+        .inventory-list {
+            display: none;
+            flex-grow: 1;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .list-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .report-bar {
+            padding: 16px 24px;
+            background: #f8f9fa;
+            display: flex;
+            gap: 40px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 12px 24px;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--google-gray);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 16px 24px;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 14px;
+        }
+
+        .btn {
+            font-family: 'Google Sans', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 8px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: 0.2s;
+        }
+
+        .btn-add {
+            background: var(--google-blue);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-edit {
+            background: white;
+            color: var(--google-blue);
+            border-color: var(--border-color);
+        }
+
+        .btn-save {
+            background: var(--google-blue);
+            color: white;
+        }
+
+        .btn-del {
+            background: transparent;
+            color: var(--google-red);
+        }
+
+        .stock-tag {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .low {
+            background: #fce8e6;
+            color: var(--google-red);
+        }
+
+        .ok {
+            background: #e6f4ea;
+            color: #137333;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .view-store {
+            display: inline-block;
+            margin-top: 16px;
+            color: var(--google-blue);
+            text-decoration: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modalTitle">Notification</h3>
+            <p id="modalMsg"></p>
+            <div class="modal-actions" id="modalActions"></div>
+        </div>
+    </div>
+
+    <header>
+        <h2>Admin Console</h2>
+    </header>
+
+    <div class="main-container">
+        <div class="form-sidebar">
+            <div id="authContainer">
+                <h3>Admin Access</h3>
+                <button class="btn btn-add" id="loginBtn">Sign In with Google</button>
+                <p style="font-size: 12px; color: #5f6368; margin-top: 10px;">Access restricted to authorized admins.
+                </p>
+            </div>
+
+            <div id="adminControls" style="display: none;">
+                <h3>Add New Product</h3>
+                <label>Product Name</label>
+                <input type="text" id="pName">
+                <label>Price ($)</label>
+                <input type="number" id="pPrice">
+                <label>Inventory Count</label>
+                <input type="number" id="pQty">
+                <label>Image URL</label>
+                <input type="text" id="pImg">
+                <button class="btn btn-add" id="addBtn">Save to Cloud</button>
+                <button id="logoutBtn"
+                    style="background:none; border:none; color:red; cursor:pointer; margin-top:15px; font-size:12px; width:100%; text-align:left;">Sign
+                    Out</button>
+            </div>
+            <a href="index.html" class="view-store">← View Customer Store</a>
+        </div>
+
+        <div class="inventory-list" id="inventoryContainer">
+            <div class="list-header">
+                <h3 style="margin:0">Live Inventory Management</h3>
+            </div>
+
+            <div id="chartSection"
+                style="padding: 24px; border-bottom: 1px solid var(--border-color); background: white; height: 300px;">
+                <canvas id="inventoryChart"></canvas>
+            </div>
+
+            <div class="report-bar">
+                <div>
+                    <span style="font-size: 11px; color: var(--google-gray); text-transform: uppercase;">Total
+                        Products</span>
+                    <strong id="totalProducts" style="font-size: 18px; display: block;">0</strong>
+                </div>
+                <div>
+                    <span style="font-size: 11px; color: var(--google-gray); text-transform: uppercase;">Total
+                        Stock</span>
+                    <strong id="totalStock" style="font-size: 18px; display: block;">0</strong>
+                </div>
+                <div>
+                    <span style="font-size: 11px; color: var(--google-gray); text-transform: uppercase;">Inventory
+                        Value</span>
+                    <strong id="totalValue"
+                        style="font-size: 18px; display: block; color: var(--google-blue);">$0.00</strong>
+                </div>
+                <div style="margin-left: auto; align-self: center;">
+                    <button class="btn btn-edit" id="exportBtn" style="font-size: 12px;">Export Report (CSV)</button>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Product</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th style="text-align: right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        let stockChart = null;
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        function updateChart(products) {
+            const ctx = document.getElementById('inventoryChart').getContext('2d');
+            const labels = products.map(p => p.name);
+            const data = products.map(p => p.qty);
+            const colors = products.map(p => p.qty < 5 ? 'rgba(217, 48, 37, 0.7)' : 'rgba(26, 115, 232, 0.7)');
+
+            if (stockChart) {
+                stockChart.destroy(); // Destroy old chart before creating new one to prevent overlap
+            }
+
+            stockChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Stock Quantity',
+                        data: data,
+                        backgroundColor: colors,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpqMoWQ-eivLBFy6OQpxB2ilE_k2FFjaw",
+            authDomain: "cpe311-project.firebaseapp.com",
+            projectId: "cpe311-project",
+            storageBucket: "cpe311-project.firebasestorage.app",
+            messagingSenderId: "929259669423",
+            appId: "1:929259669423:web:0a31f015367c3de77d115a",
+            measurementId: "G-BQYXEZ1381"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+        const productsCol = collection(db, "products");
+
+        // UI & Modal Elements
+        const modal = document.getElementById('customModal');
+        const authContainer = document.getElementById('authContainer');
+        const adminControls = document.getElementById('adminControls');
+        const inventoryContainer = document.getElementById('inventoryContainer');
+
+        const showModal = (title, message, isConfirm = false, onConfirm = null) => {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMsg').innerText = message;
+            const actions = document.getElementById('modalActions');
+            modal.style.display = 'flex';
+            if (isConfirm) {
+                actions.innerHTML = `<button class="btn btn-del" id="confirmYes">Confirm</button><button class="btn btn-edit" id="confirmNo">Cancel</button>`;
+                document.getElementById('confirmYes').onclick = () => { onConfirm(); closeModal(); };
+                document.getElementById('confirmNo').onclick = closeModal;
+            } else {
+                actions.innerHTML = `<button class="btn btn-add" onclick="this.closest('.modal-overlay').style.display='none'">Dismiss</button>`;
+            }
+        };
+        const closeModal = () => modal.style.display = 'none';
+
+        document.getElementById('loginBtn').onclick = () => signInWithPopup(auth, provider);
+        document.getElementById('logoutBtn').onclick = () => signOut(auth);
+
+        // --- AUTH & DATA VISIBILITY ---
+        onAuthStateChanged(auth, (user) => {
+            const ADMIN_EMAIL = "gogomathias3@gmail.com";
+            if (user && user.email === ADMIN_EMAIL) {
+                authContainer.style.display = 'none';
+                adminControls.style.display = 'block';
+                inventoryContainer.style.display = 'block'; // SHOW INVENTORY
+            } else {
+                authContainer.style.display = 'block';
+                adminControls.style.display = 'none';
+                inventoryContainer.style.display = 'none'; // HIDE INVENTORY
+                if (user) {
+                    showModal("Unauthorized", "Access denied for this account.");
+                    signOut(auth);
+                }
+            }
+        });
+
+        // --- CORE FUNCTIONS ---
+        let editId = null;
+        let currentProducts = [];
+
+        function updateReportSummary(products) {
+            const totalStock = products.reduce((sum, p) => sum + (Number(p.qty) || 0), 0);
+            const totalValue = products.reduce((sum, p) => sum + ((Number(p.qty) || 0) * (parseFloat(p.price) || 0)), 0);
+            document.getElementById('totalProducts').innerText = products.length;
+            document.getElementById('totalStock').innerText = totalStock;
+            document.getElementById('totalValue').innerText = `$${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+        }
+
+        function renderTable(products) {
+            currentProducts = products;
+            const table = document.getElementById('inventoryBody');
+            table.innerHTML = products.map((p) => {
+                const isEditing = editId === p.id;
+                return `
+                <tr>
+                    <td>${isEditing ? `<input type="text" id="editName-${p.id}" value="${p.name}" style="padding:5px; border:1px solid var(--google-blue); border-radius:4px;">` : `<span style="font-weight:500">${p.name}</span>`}</td>
+                    <td>${isEditing ? `<input type="number" id="editPrice-${p.id}" value="${p.price}" style="width:80px; padding:5px;">` : `$${parseFloat(p.price).toFixed(2)}`}</td>
+                    <td>${isEditing ? `<input type="number" id="editQty-${p.id}" value="${p.qty}" style="width:60px; padding:5px;">` : p.qty}</td>
+                    <td><span class="stock-tag ${p.qty < 5 ? 'low' : 'ok'}">${p.qty < 5 ? 'Low Stock' : 'Stable'}</span></td>
+                    <td style="text-align: right">
+                        ${isEditing ? `<button class="btn btn-save" id="save-${p.id}">Save</button><button class="btn" id="cancel-${p.id}">Cancel</button>` : `<button class="btn btn-edit" id="edit-${p.id}">Edit</button>`}
+                        <button class="btn btn-del" id="del-${p.id}">Delete</button>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            products.forEach(p => {
+                if (document.getElementById(`edit-${p.id}`)) document.getElementById(`edit-${p.id}`).onclick = () => { editId = p.id; renderTable(currentProducts); };
+                if (document.getElementById(`save-${p.id}`)) document.getElementById(`save-${p.id}`).onclick = () => saveEdit(p.id);
+                if (document.getElementById(`cancel-${p.id}`)) document.getElementById(`cancel-${p.id}`).onclick = () => { editId = null; renderTable(currentProducts); };
+                if (document.getElementById(`del-${p.id}`)) document.getElementById(`del-${p.id}`).onclick = () => deleteProduct(p.id);
+            });
+        }
+
+        document.getElementById('addBtn').onclick = async () => {
+            const name = document.getElementById('pName').value, price = document.getElementById('pPrice').value, qty = parseInt(document.getElementById('pQty').value), img = document.getElementById('pImg').value;
+            if (name && price && !isNaN(qty)) {
+                try { await addDoc(productsCol, { name, price, qty, img }); document.querySelectorAll('.form-sidebar input').forEach(i => i.value = ""); showModal("Success", "Product added."); }
+                catch (e) { showModal("Error", "Permission Denied."); }
+            } else { showModal("Missing Info", "Fill all fields."); }
+        };
+
+        async function saveEdit(id) {
+            try {
+                const name = document.getElementById(`editName-${id}`).value, price = document.getElementById(`editPrice-${id}`).value, qty = parseInt(document.getElementById(`editQty-${id}`).value);
+                await updateDoc(doc(db, "products", id), { name, price, qty });
+                editId = null; renderTable(currentProducts);
+            } catch (error) { showModal("Error", "Update failed."); }
+        }
+
+        function deleteProduct(id) {
+            showModal("Delete?", "Remove this item permanently?", true, async () => {
+                await deleteDoc(doc(db, "products", id));
+            });
+        }
+
+        document.getElementById('exportBtn').onclick = () => {
+            let csv = "ID,Name,Price,Stock,Value\n";
+            currentProducts.forEach(p => csv += `${p.id},"${p.name}",${p.price},${p.qty},${(p.qty * p.price).toFixed(2)}\n`);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', ''); a.setAttribute('href', url); a.setAttribute('download', 'inventory_report.csv');
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        };
+
+        onSnapshot(productsCol, (snapshot) => {
+            const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderTable(products);
+            updateReportSummary(products);
+            updateChart(products);
+        });
+    </script>
+</body>
+
+</html>

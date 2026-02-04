@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Storefront | Cloud Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Inter:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --google-blue: #1a73e8;
+            --google-red: #d93025;
+            --google-green: #1e8e3e;
+            --google-gray: #5f6368;
+            --bg-color: #ffffff;
+            --surface-color: #f8f9fa;
+            --border-color: #dadce0;
+        }
+
+        body {
+            font-family: 'Google Sans', 'Inter', sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: #202124;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation Bar */
+        nav {
+            height: 64px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 500;
+            color: var(--google-gray);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-link {
+            text-decoration: none;
+            color: var(--google-blue);
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .admin-link:hover {
+            background: #f1f3f4;
+        }
+
+        /* Main Layout */
+        .container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 32px;
+            padding: 32px;
+            box-sizing: border-box;
+        }
+
+        .main-content {
+            flex: 3;
+        }
+
+        .cart-sidebar {
+            flex: 1;
+            background: var(--surface-color);
+            border-radius: 28px;
+            padding: 24px;
+            height: fit-content;
+            position: sticky;
+            top: 96px;
+            border: 1px solid var(--border-color);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        /* Product Cards */
+        .card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            transition: box-shadow 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(60, 64, 67, 0.15);
+        }
+
+        .card img {
+            width: 100%;
+            height: 270px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            background: #fff;
+        }
+
+        .card h3 {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .price-tag {
+            font-size: 16px;
+            color: var(--google-gray);
+            margin-bottom: 20px;
+        }
+
+        .low-stock {
+            color: var(--google-red);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        /* Buttons */
+        .add-btn {
+            background-color: var(--google-blue);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-family: 'Google Sans', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: auto;
+        }
+
+        .add-btn:hover {
+            background-color: #1765cc;
+            box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
+        }
+
+        .add-btn:disabled {
+            background-color: #e8eaed;
+            color: #9aa0a6;
+            cursor: not-allowed;
+        }
+
+        .qty-btn {
+            background: white;
+            border: 1px solid var(--border-color);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            background: var(--google-blue);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 28px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            margin-top: 24px;
+        }
+
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(32, 33, 36, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 28px;
+            width: 400px;
+            box-shadow: 0 24px 38px rgba(0, 0, 0, 0.14);
+        }
+
+        #cartItems {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--google-blue)">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+            </svg>
+            Cloud Shop
+        </div>
+        <a href="admin.html" class="admin-link">Manage Inventory</a>
+    </nav>
+
+    <div class="container">
+        <div class="main-content">
+            <h1 style="font-size: 32px; margin-bottom: 32px; font-weight: 400;">Browse Collection</h1>
+            <div class="grid" id="productGrid"></div>
+        </div>
+
+        <div class="cart-sidebar">
+            <h2 style="font-weight: 400; margin-top: 0;">Your Cart</h2>
+            <div id="cartItems"></div>
+            <div style="margin-top: 24px;">
+                <div style="display:flex; justify-content: space-between; font-size: 20px; margin-bottom: 8px;">
+                    <span>Total</span>
+                    <span style="font-weight: 700;">$<span id="totalPrice">0.00</span></span>
+                </div>
+                <button id="checkoutBtn" class="checkout-btn" onclick="processCheckout()" disabled>Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="receiptModal" class="modal">
+        <div class="modal-content">
+            <div style="color: var(--google-green); margin-bottom: 16px;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z">
+                    </path>
+                </svg>
+            </div>
+            <h2 style="margin-top: 0;">Payment Successful</h2>
+            <p id="receiptDetails" style="color: var(--google-gray);"></p>
+            <button class="add-btn" style="width: 100%; margin-top: 24px;" onclick="location.reload()">Back to
+                Shopping</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, doc, updateDoc, onSnapshot }
+            from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpqMoWQ-eivLBFy6OQpxB2ilE_k2FFjaw",
+            authDomain: "cpe311-project.firebaseapp.com",
+            projectId: "cpe311-project",
+            storageBucket: "cpe311-project.firebasestorage.app",
+            messagingSenderId: "929259669423",
+            appId: "1:929259669423:web:0a31f015367c3de77d115a",
+            measurementId: "G-BQYXEZ1381"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const productsCol = collection(db, "products");
+
+        let products = [];
+        let cart = [];
+
+        onSnapshot(productsCol, (snapshot) => {
+            products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderStore();
+            updateCartUI();
+        });
+
+        function renderStore() {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = products.map((p) => `
+            <div class="card">
+                <img src="${p.img || 'https://via.placeholder.com/300'}" alt="${p.name}">
+                ${p.qty < 5 && p.qty > 0 ? `<div class="low-stock">Limited Stock: Only ${p.qty} left</div>` : ''}
+                ${p.qty <= 0 ? `<div class="low-stock" style="color: var(--google-gray)">Currently Unavailable</div>` : ''}
+                <h3>${p.name}</h3>
+                <div class="price-tag">$${parseFloat(p.price).toFixed(2)}</div>
+                <button class="add-btn" onclick="window.addToCart('${p.id}')" ${p.qty <= 0 ? 'disabled' : ''}>
+                    ${p.qty <= 0 ? 'Sold Out' : 'Add to Cart'}
+                </button>
+            </div>
+        `).join('');
+        }
+
+        window.addToCart = (id) => {
+            const product = products.find(p => p.id === id);
+            const cartItem = cart.find(item => item.id === id);
+            if (product && product.qty > 0) {
+                if (cartItem) { cartItem.cartQty++; }
+                else { cart.push({ ...product, cartQty: 1 }); }
+                product.qty--;
+                updateCartUI();
+                renderStore();
+            }
+        };
+
+        window.changeQty = (id, delta) => {
+            const product = products.find(p => p.id === id);
+            const cartItem = cart.find(item => item.id === id);
+            if (delta === 1 && product.qty > 0) {
+                cartItem.cartQty++;
+                product.qty--;
+            } else if (delta === -1) {
+                cartItem.cartQty--;
+                product.qty++;
+                if (cartItem.cartQty === 0) cart = cart.filter(i => i.id !== id);
+            }
+            updateCartUI();
+            renderStore();
+        };
+
+        function updateCartUI() {
+            const container = document.getElementById('cartItems');
+            let total = 0;
+            container.innerHTML = cart.length === 0 ? '<p style="color:var(--google-gray)">Your cart is empty</p>' :
+                cart.map(item => {
+                    total += item.price * item.cartQty;
+                    return `
+                    <div class="cart-item">
+                        <div>
+                            <div style="font-weight:500">${item.name}</div>
+                            <div style="font-size:14px; color:var(--google-gray)">$${parseFloat(item.price).toFixed(2)}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:12px">
+                            <button class="qty-btn" onclick="window.changeQty('${item.id}', -1)">−</button>
+                            <span style="font-weight:500">${item.cartQty}</span>
+                            <button class="qty-btn" onclick="window.changeQty('${item.id}', 1)" ${products.find(p => p.id === item.id).qty <= 0 ? 'disabled' : ''}>+</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            document.getElementById('totalPrice').innerText = total.toFixed(2);
+            document.getElementById('checkoutBtn').disabled = cart.length === 0;
+        }
+
+        window.processCheckout = async () => {
+            const btn = document.getElementById('checkoutBtn');
+
+            try {
+                // 1. Disable button and show loading state
+                btn.disabled = true;
+                btn.innerText = "Processing...";
+
+                // 2. Update Firestore for each item in the cart
+                for (const item of cart) {
+                    const productRef = doc(db, "products", item.id);
+                    const liveProduct = products.find(p => p.id === item.id);
+
+                    // This syncs the remaining stock back to the database
+                    await updateDoc(productRef, {
+                        qty: liveProduct.qty
+                    });
+                }
+
+                // 3. Show the Receipt Modal
+                const finalTotal = document.getElementById('totalPrice').innerText;
+                document.getElementById('receiptDetails').innerHTML = `
+            <strong>Order Summary:</strong><br>
+            Total Paid: $${finalTotal}<br><br>
+            Your items will be shipped shortly. Thank you for shopping!
+        `;
+                document.getElementById('receiptModal').style.display = 'flex';
+
+                // 4. Clear the cart
+                cart = [];
+                updateCartUI();
+
+            } catch (error) {
+                console.error("Checkout Error:", error);
+                alert("Checkout failed. Please check your internet connection or Firebase permissions.");
+                btn.disabled = false;
+                btn.innerText = "Checkout";
+            }
+        };
+    </script>
+</body>
+
+</html>

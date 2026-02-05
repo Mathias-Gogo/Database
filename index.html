@@ -303,6 +303,8 @@
             products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderStore();
             updateCartUI();
+
+            //snapshot
         });
 
         function renderStore() {

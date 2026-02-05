@@ -1,6 +1,6 @@
 services:
-  - type: web
+  - type: static
     name: my-database-app
-    runtime: static
+    env: static
     buildCommand: ""
-    publishPath: "."
+    staticPublishPath: "."

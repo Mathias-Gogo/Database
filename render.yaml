@@ -1,0 +1,6 @@
+services:
+  - type: static
+    name: my-database-app
+    env: static
+    buildCommand: ""
+    publishPath: "."
